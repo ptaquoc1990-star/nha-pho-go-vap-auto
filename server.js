@@ -3,7 +3,6 @@ import express from 'express';
 import session from 'express-session';
 import multer from 'multer';
 import OpenAI from 'openai';
-import { editListing } from './lib/localEditor.js';
 import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -25,6 +24,26 @@ const DATA_DIR = path.join(__dirname, 'data');
 const HISTORY_FILE = path.join(DATA_DIR, 'history.json');
 await fs.mkdir(DATA_DIR, { recursive: true }).catch(() => {});
 await fs.mkdir(path.join(__dirname, 'uploads'), { recursive: true }).catch(() => {});
+
+// --- Nhóm ưu tiên (200 nhóm, xếp theo số thành viên giảm dần) ---
+// Nguồn: data/priority-groups.json (copy từ danh sách 200 nhóm ưu tiên).
+// Máy chủ chỉ PHỤC VỤ danh sách và GHI NHẬN nhóm đã chọn/đã đăng xong;
+// Facebook đã khóa đăng nhóm qua Graph API nên việc đăng vào nhóm do trợ lý
+// làm tay qua trình duyệt (đăng riêng từng bài vào từng nhóm, không dùng Share).
+const GROUPS_FILE = path.join(DATA_DIR, 'priority-groups.json');
+let priorityGroups = [];
+try {
+  const parsed = JSON.parse(await fs.readFile(GROUPS_FILE, 'utf8'));
+  if (Array.isArray(parsed)) priorityGroups = parsed;
+} catch { priorityGroups = []; }
+const groupIdSet = new Set(priorityGroups.map(g => g.id));
+function parseGroupIds(raw) {
+  try {
+    const arr = JSON.parse(String(raw || '[]'));
+    if (!Array.isArray(arr)) return [];
+    return [...new Set(arr.map(String))].filter(id => groupIdSet.has(id)).slice(0, 200);
+  } catch { return []; }
+}
 
 async function loadHistory() {
   try {
@@ -136,7 +155,6 @@ app.get('/api/status', (req, res) => {
     facebookConnected: Boolean(req.session.pages?.length),
     selectedPage: req.session.selectedPage?.name || null,
     hasOpenAI: Boolean(process.env.OPENAI_API_KEY),
-    rewriteMode: process.env.OPENAI_API_KEY ? 'openai' : 'local',
     hasMeta: Boolean(process.env.META_APP_ID && process.env.META_APP_SECRET && process.env.META_REDIRECT_URI)
   });
 });
@@ -196,11 +214,10 @@ app.post('/api/select-page', (req, res) => {
 });
 
 app.post('/api/rewrite', async (req, res) => {
+  const issue = requireConfig(['OPENAI_API_KEY']);
+  if (issue) return res.status(503).json({ error: issue });
   const source = String(req.body.source || '').trim();
   if (source.length < 10) return res.status(400).json({ error: 'Vui lòng nhập nội dung căn nhà.' });
-  if (!process.env.OPENAI_API_KEY) {
-    return res.json({ text: editListing(source), source: 'local', note: 'Biên tập nội bộ (không dùng AI, không cần API key).' });
-  }
   try {
     const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, timeout: 60000 });
     const response = await client.responses.create({
@@ -210,7 +227,7 @@ app.post('/api/rewrite', async (req, res) => {
     });
     res.json({ text: response.output_text || '' });
   } catch (err) {
-    try { return res.json({ text: editListing(source), source: 'local', note: 'OpenAI lỗi, đã chuyển sang biên tập nội bộ: ' + (err.message || '') }); } catch { return res.status(500).json({ error: err.message || 'Không biên tập được nội dung.' }); }
+    res.status(500).json({ error: err.message || 'Không biên tập được nội dung.' });
   }
 });
 
@@ -223,7 +240,8 @@ app.post('/api/publish', upload.array('photos', 15), async (req, res) => {
   const entry = await addHistory({
     id: crypto.randomUUID(), createdAt: new Date().toISOString(), scheduledFor: null,
     message, summary: summaryOf(message), pageId: page.id, pageName: page.name,
-    photoCount: files.length, photoFiles: files, status: 'posting', postId: null, postUrl: null, error: null
+    photoCount: files.length, photoFiles: files, status: 'posting', postId: null, postUrl: null, error: null,
+    shareTargetGroupIds: parseGroupIds(req.body.groupIds), sharedGroupIds: []
   });
   try {
     const post = await publishToFacebook(page, message, files);
@@ -252,7 +270,8 @@ app.post('/api/schedule', upload.array('photos', 15), async (req, res) => {
     id: crypto.randomUUID(), createdAt: new Date().toISOString(), scheduledFor,
     message, summary: summaryOf(message), pageId: page.id, pageName: page.name,
     photoCount: files.length, photoFiles: files, pageAccessToken: page.accessToken,
-    status: 'scheduled', postId: null, postUrl: null, error: null
+    status: 'scheduled', postId: null, postUrl: null, error: null,
+    shareTargetGroupIds: parseGroupIds(req.body.groupIds), sharedGroupIds: []
   });
   res.json({ ok: true, historyId: entry.id, scheduledFor, pageName: page.name, photoCount: files.length });
 });
@@ -266,7 +285,8 @@ app.post('/api/drafts', upload.array('photos', 15), async (req, res) => {
   const entry = await addHistory({
     id: crypto.randomUUID(), createdAt: new Date().toISOString(), scheduledFor: null,
     message, summary: summaryOf(message), pageId: null, pageName: null,
-    photoCount: files.length, photoFiles: files, status: 'draft', postId: null, postUrl: null, error: null
+    photoCount: files.length, photoFiles: files, status: 'draft', postId: null, postUrl: null, error: null,
+    shareTargetGroupIds: parseGroupIds(req.body.groupIds), sharedGroupIds: []
   });
   res.json({ ok: true, historyId: entry.id });
 });
@@ -274,6 +294,49 @@ app.post('/api/drafts', upload.array('photos', 15), async (req, res) => {
 app.get('/api/history', async (req, res) => {
   const list = await loadHistory();
   res.json({ posts: list.map(publicEntry) });
+});
+
+// Danh sách 200 nhóm ưu tiên (xếp theo số thành viên giảm dần).
+app.get('/api/groups', (req, res) => {
+  res.json({ groups: priorityGroups, count: priorityGroups.length });
+});
+
+app.get('/api/history/:id', async (req, res) => {
+  const list = await loadHistory();
+  const entry = list.find(e => e.id === req.params.id);
+  if (!entry) return res.status(404).json({ error: 'Không tìm thấy bài đăng.' });
+  res.json({ post: publicEntry(entry) });
+});
+
+// Lưu danh sách nhóm đã chọn cho một bài. Được đổi khi bài còn là Bản nháp,
+// Thất bại hoặc Đã hẹn giờ — KỂ CẢ SAU KHI đã hẹn (danh sách nhóm chỉ được
+// đọc lúc bài thực sự đăng nên lựa chọn mới nhất luôn có hiệu lực). Bài Đã
+// đăng / Đã hủy / Đang đăng thì không đổi được nữa.
+app.post('/api/history/:id/share-targets', async (req, res) => {
+  const list = await loadHistory();
+  const entry = list.find(e => e.id === req.params.id);
+  if (!entry) return res.status(404).json({ error: 'Không tìm thấy bài đăng.' });
+  if (!['draft', 'failed', 'scheduled'].includes(entry.status)) return res.status(400).json({ error: 'Bài này không còn đổi được danh sách nhóm chia sẻ.' });
+  const clean = parseGroupIds(JSON.stringify(req.body.groupIds || []));
+  await updateHistory(entry.id, { shareTargetGroupIds: clean });
+  res.json({ ok: true, groupIds: clean });
+});
+
+// Đánh dấu nhóm đã đăng xong (đăng riêng từng bài vào từng nhóm, làm tay
+// hoặc qua trợ lý; máy chủ chỉ ghi nhận tiến độ, không tự đăng vào nhóm).
+// Body: { groupIds: [...], shared: true|false } (mặc định true).
+app.post('/api/history/:id/share-groups', async (req, res) => {
+  const list = await loadHistory();
+  const entry = list.find(e => e.id === req.params.id);
+  if (!entry) return res.status(404).json({ error: 'Không tìm thấy bài đăng.' });
+  if (!['published', 'scheduled', 'posting'].includes(entry.status)) return res.status(400).json({ error: 'Chỉ đánh dấu được nhóm cho bài đã đăng hoặc đã hẹn giờ.' });
+  const ids = parseGroupIds(JSON.stringify(req.body.groupIds || []));
+  const targets = new Set(entry.shareTargetGroupIds || []);
+  const done = new Set(entry.sharedGroupIds || []);
+  const mark = req.body.shared !== false;
+  ids.forEach(id => { if (targets.has(id)) { if (mark) done.add(id); else done.delete(id); } });
+  await updateHistory(entry.id, { sharedGroupIds: [...done] });
+  res.json({ ok: true, sharedGroupIds: [...done] });
 });
 
 app.post('/api/history/:id/retry', async (req, res) => {

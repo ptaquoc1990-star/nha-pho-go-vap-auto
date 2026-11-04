@@ -146,7 +146,7 @@ này chỉ nhắm đến Fanpage.
     không điền secret thật.
 
 Các biến môi trường có thể cần (điều chỉnh theo triển khai thực tế):
-AI_API_KEY= META_APP_ID= META_APP_SECRET= META_REDIRECT_URI=
+AI_API_KEY=[DA-XOA-KHOA-API-THAT — dien key cua ban vao file .env]
 META_GRAPH_API_VERSION= DATABASE_URL= SUPABASE_URL= SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY= APP_BASE_URL=
 

@@ -1,8 +1,8 @@
 {
   "name": "nha-pho-go-vap-auto",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "private": true,
-  "description": "AI soan tin ban nha va dang len Facebook Page sau khi nguoi dung xac nhan",
+  "description": "Soan tin ban nha va dang len Facebook Page, chia se ra 200 nhom uu tien",
   "type": "module",
   "scripts": {"start": "node server.js", "dev": "node --watch server.js"},
   "engines": {"node": ">=20"},
