@@ -1,0 +1,16 @@
+{
+  "name": "nha-pho-go-vap-auto",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI soan tin ban nha va dang len Facebook Page sau khi nguoi dung xac nhan",
+  "type": "module",
+  "scripts": {"start": "node server.js", "dev": "node --watch server.js"},
+  "engines": {"node": ">=20"},
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "multer": "^1.4.5-lts.1",
+    "openai": "^5.20.0"
+  }
+}

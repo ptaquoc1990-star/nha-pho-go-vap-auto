@@ -1,0 +1,232 @@
+YÊU CẦU XÂY DỰNG ỨNG DỤNG: NHÀ PHỐ GÒ VẤP AUTO Phiên bản yêu cầu: MVP
+1.0 Ngôn ngữ giao diện: Tiếng Việt Thiết bị ưu tiên: Điện thoại Android,
+giao diện responsive
+
+VAI TRÒ CỦA BẠN Bạn là AI agent có khả năng lập trình, thao tác trình
+duyệt, tạo dự án, cấu hình dịch vụ và triển khai ứng dụng. Hãy thực hiện
+công việc theo từng giai đoạn, ưu tiên tự động hóa tối đa. Không chỉ đưa
+hướng dẫn hoặc mã mẫu: hãy tạo dự án thực tế, chạy thử, sửa lỗi và triển
+khai nếu môi trường cùng quyền truy cập cho phép.
+
+Nếu thiếu quyền truy cập hoặc cần người dùng xác nhận, hãy dừng đúng tại
+bước đó, giải thích ngắn gọn và chỉ yêu cầu đúng thao tác cần thiết.
+Không giả vờ rằng ứng dụng đã triển khai hoặc Facebook đã kết nối khi
+chưa kiểm chứng.
+
+1.  MỤC TIÊU SẢN PHẨM Xây dựng ứng dụng web có tên chính xác: “Nhà Phố
+    Gò Vấp Auto”. Ứng dụng dùng để nhập nội dung và hình ảnh một căn
+    nhà, dùng AI biên tập thành bài đăng bán nhà theo chuẩn người dùng
+    đã thống nhất trong ChatGPT, cho xem trước, sau đó người dùng bấm
+    nút “ĐĂNG NGAY” để đăng lên Fanpage Facebook đã kết nối.
+
+Chỉ phục vụ TIN BÁN NHÀ. Không tạo lựa chọn cho thuê, không tạo loại tin
+khác.
+
+Luồng sử dụng: (1) Người dùng dán nội dung gốc của căn nhà. (2) Người
+dùng tải lên một hoặc nhiều hình ảnh của chính căn nhà đó. (3) AI tự
+biên tập theo quy tắc bên dưới. (4) Ứng dụng hiển thị bản xem trước nội
+dung và ảnh. (5) Người dùng chỉnh sửa nếu muốn và bấm “ĐĂNG NGAY”. (6)
+Máy chủ đăng bài lên Fanpage thông qua Meta Graph API chính thức. (7)
+Ứng dụng thông báo kết quả, lưu lịch sử và đường dẫn bài đăng nếu Meta
+trả về.
+
+Không tự động đăng khi chưa có thao tác xác nhận cuối cùng của người
+dùng.
+
+2.  QUY TẮC BIÊN TẬP BÀI BÁN NHÀ — BẮT BUỘC AI phải dùng các quy tắc sau
+    làm mặc định, không bắt người dùng chọn phong cách hay mẫu mỗi lần:
+
+-   Dòng đầu tiên: số điện thoại liên hệ, nếu nội dung nguồn có cung
+    cấp.
+-   Dòng thứ hai: giá bán.
+-   Dòng thứ ba: tiêu đề theo mẫu “✅ Bán nhà đường [địa chỉ]…”.
+-   Không dùng từ “hẻm” trong tiêu đề.
+-   Các dòng tiếp theo lần lượt thể hiện diện tích/kích thước, kết cấu,
+    vị trí, tiện ích và thông tin bổ sung nếu nguồn có.
+-   Mỗi thông tin trên một dòng riêng.
+-   Không chèn dòng trống giữa các dòng.
+-   Không thêm các nhãn không cần thiết như “🎁 Thêm:”.
+-   Bỏ hoàn toàn thông tin hoa hồng/hoa hồng môi giới/commission dù có
+    trong nội dung gốc.
+-   Chuẩn hóa cách ghi giá. Ví dụ “5 tỷ 250” thành “5.25 tỷ”; giữ đúng
+    giá trị, không tự làm tròn hoặc thay đổi giá.
+-   Lặp lại dòng giá bán ở cuối bài.
+-   Không tự thêm thông tin không có trong nguồn. Không tự suy đoán số
+    phòng, diện tích, pháp lý, hướng nhà, vị trí hoặc tiện ích.
+-   Thiếu dữ liệu nào thì bỏ dòng đó, không ghi “chưa cập nhật”.
+-   Nội dung phải gọn, dễ đọc, dễ sao chép và phù hợp đăng
+    Facebook/Zalo.
+-   Không tự thêm số điện thoại nếu nguồn không có.
+-   Không đưa số điện thoại vào ảnh infographic nếu sau này có chức năng
+    tạo ảnh; số điện thoại chỉ xuất hiện trong nội dung bài viết theo
+    quy tắc trên.
+-   Không thay đổi địa chỉ, số nhà, tên đường, phường hoặc dữ liệu pháp
+    lý từ nguồn.
+
+Ví dụ cấu trúc: [Số điện thoại nếu có] 💰 Giá bán: [giá đã chuẩn hóa] ✅
+Bán nhà đường [địa chỉ]… 📏 Diện tích: [diện tích/kích thước] 🏠 Kết
+cấu: [kết cấu] 📍 Vị trí: [vị trí] 🛍️ Tiện ích: [tiện ích] [Thông tin bổ
+sung nếu có] 💰 Giá bán: [lặp lại đúng giá]
+
+Đây là cấu trúc tham khảo; chỉ xuất các trường thực sự có dữ liệu. Không
+thêm dòng trống.
+
+3.  GIAO DIỆN ỨNG DỤNG Thiết kế giao diện đơn giản, tiếng Việt, ưu tiên
+    màn hình điện thoại:
+
+-   Tên/logo chữ: NHÀ PHỐ GÒ VẤP AUTO.
+-   Trang chính có một chức năng duy nhất: “TẠO BÀI ĐĂNG BÁN NHÀ”.
+-   Ô lớn để dán nội dung gốc.
+-   Khu vực tải lên nhiều ảnh cùng lúc; cho phép xem ảnh thu nhỏ, đổi
+    thứ tự và xóa ảnh trước khi đăng.
+-   Nút “AI BIÊN TẬP”.
+-   Khu vực xem trước bài viết và bộ ảnh.
+-   Cho phép sửa nội dung đã biên tập trước khi đăng.
+-   Nút chính “ĐĂNG NGAY”.
+-   Khu vực chọn Fanpage đã kết nối (nếu tài khoản quản lý nhiều
+    Fanpage).
+-   Trang lịch sử: thời gian, nội dung tóm tắt, Fanpage, trạng thái,
+    link bài đăng.
+-   Trạng thái rõ ràng: Bản nháp / Đang đăng / Đã đăng / Thất bại.
+-   Có nút thử đăng lại khi thất bại, tránh đăng trùng bài.
+-   Không hiển thị các lựa chọn “Cho thuê” hoặc lựa chọn phong cách biên
+    tập.
+-   Giao diện gọn, dễ thao tác bằng một tay trên Android.
+
+4.  KẾT NỐI FACEBOOK FANPAGE Chỉ sử dụng phương thức chính thức của
+    Meta:
+
+-   Meta Login / OAuth và Meta Graph API.
+-   Người dùng tự đăng nhập Facebook và cấp quyền trên màn hình chính
+    thức của Meta.
+-   Tuyệt đối không yêu cầu, thu thập hoặc lưu mật khẩu Facebook.
+-   Không yêu cầu người dùng gửi Access Token qua tin nhắn hoặc dán
+    token vào giao diện không bảo mật.
+-   Không dùng cookie, giả lập đăng nhập, scraping, hoặc tự động hóa
+    trình duyệt để vượt cơ chế bảo vệ hay điều khoản của Meta.
+-   Dùng quyền phù hợp, tối thiểu gồm pages_show_list,
+    pages_read_engagement và pages_manage_posts, tùy yêu cầu sản phẩm và
+    phiên bản Graph API hiện hành.
+-   Lấy danh sách Fanpage mà người dùng có quyền quản lý; cho phép chọn
+    Fanpage đích.
+-   Dùng Page Access Token ở phía máy chủ, lưu bằng secret manager hoặc
+    biến môi trường bảo mật. Không gửi token xuống trình duyệt, không
+    ghi token vào log, không commit token vào Git.
+-   Kiểm tra yêu cầu hiện hành của Meta về App Review, quyền truy cập
+    nâng cao, Business Verification và chế độ Development/Live. Không
+    khẳng định có thể đăng cho mọi người dùng trước khi các yêu cầu đó
+    được đáp ứng.
+-   Đăng nội dung và nhiều ảnh lên Fanpage theo đúng endpoint và quy
+    trình được Meta hỗ trợ tại thời điểm triển khai.
+-   Sau khi đăng, lưu post ID, permalink nếu có, thời gian và trạng
+    thái.
+-   Xử lý token hết hạn, quyền bị thu hồi, lỗi API, giới hạn tốc độ và
+    lỗi upload ảnh.
+-   Không đăng lại tự động khi không chắc lần đăng trước đã thành công;
+    phải kiểm tra để tránh trùng bài.
+
+Lưu ý sản phẩm: Meta API hỗ trợ đăng lên Facebook Pages theo quyền được
+cấp; không thiết kế tính năng đăng tự động lên trang cá nhân. Sản phẩm
+này chỉ nhắm đến Fanpage.
+
+5.  KIẾN TRÚC KỸ THUẬT ĐỀ XUẤT Ưu tiên công nghệ phổ biến, chi phí thấp
+    và dễ bảo trì:
+
+-   Frontend: Next.js hoặc React, responsive/PWA nếu phù hợp.
+-   Backend: API routes/server actions hoặc Node.js service.
+-   Database: Supabase PostgreSQL hoặc lựa chọn tương đương có gói miễn
+    phí phù hợp.
+-   Lưu ảnh: Supabase Storage hoặc object storage tương đương.
+-   AI: dùng API model AI để biên tập nội dung. Khóa API chỉ lưu phía
+    máy chủ.
+-   Hosting: Vercel/Render hoặc nền tảng tương đương; cần HTTPS và biến
+    môi trường.
+-   Quản lý mã nguồn: GitHub nếu người dùng kết nối và cho phép.
+-   Tạo file .env.example liệt kê tên biến cần thiết nhưng tuyệt đối
+    không điền secret thật.
+
+Các biến môi trường có thể cần (điều chỉnh theo triển khai thực tế):
+AI_API_KEY= META_APP_ID= META_APP_SECRET= META_REDIRECT_URI=
+META_GRAPH_API_VERSION= DATABASE_URL= SUPABASE_URL= SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY= APP_BASE_URL=
+
+Không được đưa giá trị thật của secret vào source code, file README công
+khai, client bundle hoặc GitHub.
+
+6.  BẢO MẬT VÀ QUYỀN RIÊNG TƯ
+
+-   Bảo vệ phiên đăng nhập của người dùng ứng dụng.
+-   Kiểm tra quyền ở backend trước mọi thao tác đăng bài.
+-   Mã hóa hoặc lưu token bằng cơ chế bảo mật phù hợp.
+-   Không log nội dung nhạy cảm hoặc token.
+-   Có chức năng ngắt kết nối Fanpage và xóa token.
+-   Chỉ lưu ảnh và nội dung cần thiết; nêu rõ chính sách lưu trữ.
+-   Chống CSRF, XSS, upload file nguy hiểm và truy cập trái phép.
+-   Giới hạn loại file ảnh và dung lượng; kiểm tra MIME type thực tế.
+-   Không công khai endpoint đăng bài hoặc thông tin cấu hình.
+-   Không tự ý đăng bài; luôn cần nút xác nhận “ĐĂNG NGAY”.
+
+7.  KIỂM THỬ BẮT BUỘC Trước khi bàn giao:
+
+-   Kiểm tra biên tập tin có giá dạng “5 tỷ 250” thành “5.25 tỷ”.
+-   Kiểm tra bỏ thông tin hoa hồng.
+-   Kiểm tra không có dòng trống giữa các trường.
+-   Kiểm tra giá được lặp lại ở cuối.
+-   Kiểm tra không tự bịa dữ liệu khi thiếu thông tin.
+-   Kiểm tra tải lên nhiều ảnh, xem trước, đổi thứ tự và xóa ảnh.
+-   Kiểm tra người dùng phải bấm xác nhận trước khi đăng.
+-   Kiểm tra lỗi Meta API và token hết hạn.
+-   Kiểm tra trạng thái và lịch sử bài đăng.
+-   Chạy lint, typecheck, unit tests và build.
+-   Không dùng Fanpage thật để thử đăng nội dung giả nếu chưa được người
+    dùng đồng ý. Có thể dùng chế độ xem trước hoặc môi trường thử nghiệm
+    trước.
+
+8.  KẾ HOẠCH TRIỂN KHAI Thực hiện theo thứ tự: Giai đoạn A: Kiểm tra mã
+    nguồn ZIP “nha-pho-go-vap-auto” nếu người dùng đã cung cấp hoặc có
+    trong workspace. Không giả định đã đọc được file nếu không truy cập
+    được. Nếu có mã nguồn, kiểm tra trước khi viết lại. Giai đoạn B: Tạo
+    hoàn chỉnh frontend và backend, chạy local, sửa lỗi. Giai đoạn C:
+    Tạo database/storage và cấu hình bảo mật. Giai đoạn D: Hướng dẫn
+    hoặc thực hiện tạo Meta App, OAuth redirect URI, quyền và App Review
+    theo yêu cầu của Meta. Giai đoạn E: Triển khai HTTPS, cấu hình
+    environment secrets. Giai đoạn F: Người dùng tự cấp quyền Facebook
+    qua OAuth và chọn Fanpage. Giai đoạn G: Kiểm thử bằng bản xem trước;
+    chỉ đăng bài thử khi người dùng xác nhận rõ. Giai đoạn H: Bàn giao
+    URL ứng dụng, hướng dẫn sử dụng tiếng Việt, hướng dẫn đổi mật
+    khẩu/thu hồi quyền nếu cần, và ghi rõ các giới hạn còn lại.
+
+9.  NGUYÊN TẮC LÀM VIỆC VỚI NGƯỜI DÙNG Người dùng không chuyên lập trình
+    và đang thao tác chủ yếu trên điện thoại Android. Hãy:
+
+-   Tự thực hiện các thao tác kỹ thuật mà bạn có quyền thực hiện.
+-   Hướng dẫn từng bước ngắn, mỗi lần chỉ yêu cầu một hành động khi cần
+    người dùng thao tác.
+-   Dùng tiếng Việt, tránh thuật ngữ không giải thích.
+-   Không yêu cầu người dùng tự viết code.
+-   Không yêu cầu mật khẩu Facebook, token, khóa API trong chat.
+-   Khi cần người dùng đăng nhập hoặc cấp quyền, mở đúng trang chính
+    thức và để họ tự xác nhận.
+-   Nếu không thể triển khai do thiếu quyền hoặc dịch vụ trả phí, nói rõ
+    chính xác điểm chặn và đưa phương án miễn phí/thay thế thực tế.
+-   Không tuyên bố “đã tạo xong”, “đã kết nối”, “đã đăng thành công” nếu
+    chưa có kết quả xác nhận.
+
+10. KẾT QUẢ BÀN GIAO Cần bàn giao:
+
+-   Mã nguồn hoàn chỉnh.
+-   README tiếng Việt, hướng dẫn cài đặt và chạy.
+-   .env.example không chứa bí mật.
+-   Cấu trúc database và migration.
+-   Hướng dẫn cấu hình Meta App và OAuth.
+-   URL ứng dụng sau khi triển khai thành công.
+-   Hướng dẫn thao tác: nhập nội dung, tải ảnh, biên tập, xem trước, bấm
+    đăng, xem lịch sử.
+-   Danh sách việc còn cần người dùng phê duyệt hoặc cung cấp.
+
+BẮT ĐẦU NGAY Trước tiên, kiểm tra workspace và các file dự án hiện có.
+Nếu có file ZIP “nha-pho-go-vap-auto”, hãy giải nén và đánh giá mã
+nguồn. Sau đó tiếp tục xây dựng dựa trên mã hiện có, tránh tạo dự án
+trùng lặp. Nếu không có file, hãy khởi tạo dự án mới. Hãy báo cáo ngắn
+gọn kết quả thực tế sau mỗi giai đoạn và tiếp tục cho đến khi gặp một
+bước cần người dùng đăng nhập, cấp quyền hoặc xác nhận.
