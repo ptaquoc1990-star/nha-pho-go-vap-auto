@@ -1,0 +1,38 @@
+name: Unzip deploy bundle
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  unzip:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-actions[bot]'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unzip and replace repo contents
+        run: |
+          set -e
+          zipfile=$(ls *.zip 2>/dev/null | head -n 1 || true)
+          if [ -z "$zipfile" ]; then echo "No zip found, skipping"; exit 0; fi
+          echo "Found zip: $zipfile"
+          rm -rf extracted
+          unzip -o "$zipfile" -d extracted
+          src="extracted"
+          entries=(extracted/*)
+          if [ "${#entries[@]}" = "1" ] && [ -d "${entries[0]}" ]; then
+            src="${entries[0]}"
+          fi
+          echo "Source dir: $src"
+          ls -la "$src"
+          find . -mindepth 1 -maxdepth 1 ! -name '.git' ! -name '.github' ! -name extracted ! -name "$zipfile" -exec rm -rf {} +
+          cp -a "$src"/. .
+          rm -rf extracted "$zipfile" .github
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git add -f data/priority-groups.json || true
+          git status --short
+          if git diff --cached --quiet; then echo "Nothing to commit"; exit 0; fi
+          git commit -m "Extract deploy bundle 0.3.0"
+          git push
